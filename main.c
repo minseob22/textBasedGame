@@ -5,6 +5,7 @@
 #include "character.h"
 #include "enemy.h"
 #include "battleScene.h"
+#include "attacker.h"
 
 // Main game menu
 void main_menu() {
