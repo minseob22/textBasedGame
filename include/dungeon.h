@@ -5,6 +5,10 @@
     #include "character.h"
     #include "enemy.h"
 
+    #include "../include/goblin.h"
+    #include "../include/orc.h"
+    #include "../include/mimic.h"
+
     #define N 4
     #define M 4
 
@@ -19,12 +23,13 @@
         int x; // 플레이어의 x 좌표
         int y; // 플레이어의 y 좌표
         int map[N][M]; // 맵 배열
+        Enemy enemies[N][M];
     } Dungeon;
 
     void initialize_dungeon(Dungeon *dungeon);
+    void move_party(Dungeon *dungeon, char direction, Character characters[], int char_count);
     void printMap(Dungeon *dungeon);
-    void move_party(Dungeon *dungeon, char direction);
-    void movePlayer(Dungeon *dungeon, int dx, int dy);
+    void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int char_count);
     int handle_event(Dungeon *dungeon, Character characters[], int char_count);
 
-    #endif
+    #endif // DUNGEON_H

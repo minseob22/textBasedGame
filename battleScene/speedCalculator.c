@@ -14,6 +14,16 @@ void update_gauges(Attacker *all_attackers[], int total_count) {
     }
 }
 
+/*
+void update_gauges(Attacker *all_attackers[], int total_count) {
+    for (int i = 0; i < total_count; i++) {
+        all_attackers[i]->gauge += all_attackers[i]->speed; // 속도에 비례하여 게이지 증가
+        if (all_attackers[i]->gauge > 100) {
+            all_attackers[i]->gauge = 100; // 최대 게이지 제한
+        }
+    }
+}*/
+
 // 게이지가 가장 높은 다음 공격자를 찾는 함수
 int find_next_attacker(Attacker *all_attackers[], int total_count) {
     int max_gauge = -1;
@@ -27,6 +37,16 @@ int find_next_attacker(Attacker *all_attackers[], int total_count) {
     }
     return attacker_index;  // 가장 높은 게이지의 공격자 인덱스 반환, 없으면 -1
 }
+
+/*int find_next_attacker(Attacker *all_attackers[], int total_count) {
+    for (int i = 0; i < total_count; i++) {
+        if (all_attackers[i]->gauge >= 100) {
+            return i; // 게이지가 100 이상인 첫 번째 공격자 인덱스를 반환
+        }
+    }
+    return -1; // 행동할 수 있는 공격자가 없으면 -1 반환
+}*/
+
 
 // 전투 루프에서 가장 높은 게이지의 공격자가 우선적으로 턴을 가지도록 처리하는 함수
 void handle_turn(Character characters[], int char_count, Enemy enemies[], int enemy_count) {

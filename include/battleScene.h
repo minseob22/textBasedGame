@@ -1,16 +1,14 @@
 #ifndef BATTLE_SCENE_H
 #define BATTLE_SCENE_H
 
-#include "../include/character.h"
-#include "../include/enemy.h"
-#include "attacker.h"
+#include "character.h"
+#include "enemy.h"
 
+// 함수 인자 타입을 Character 및 Enemy로 수정
 void initialize_battle_scene(Character characters[], int char_count, Enemy enemies[], int enemy_count);
+void start_battle(Character characters[], int char_count, Enemy enemies[], int enemy_count);
 void reset_gauge(Attacker *attacker);
-void start_battle(Attacker characters[], int char_count, Attacker enemies[], int enemy_count);
-int speed_gague(Character character[], int char_count, Enemy enemy[], int enmey_count);
+int speed_gague(Character character[], int char_count, Enemy enemy[], int enemy_count);
 void attack(Attacker *attacker, Attacker *defender);
-
-
 
 #endif // BATTLE_SCENE_H

@@ -2,7 +2,7 @@
 #include "../include/battleScene.h"
 #include "../include/damageCalculator.h"
 #include "../include/attacker.h"
-#include "../include/speedCalculator.h"
+#include "../include/speedCalculator.h" 
 
 void initialize_battle_scene(Character characters[], int char_count, Enemy enemies[], int enemy_count) {
     for (int i = 0; i < enemy_count; i++) {
@@ -17,16 +17,17 @@ void reset_gauge(Attacker *attacker) {
     attacker->gauge = 0; // 턴이 끝난 후 게이지를 초기화
 }
 
-void start_battle(Attacker characters[], int char_count, Attacker enemies[], int enemy_count) {
+
+void start_battle(Character characters[], int char_count, Enemy enemies[], int enemy_count) {
     int total_count = char_count + enemy_count;
     Attacker *all_attackers[total_count];
     
     // 캐릭터와 적을 하나의 배열로 병합
     for (int i = 0; i < char_count; i++) {
-        all_attackers[i] = &characters[i];
+        all_attackers[i] = &characters[i].attacker;
     }
     for (int i = 0; i < enemy_count; i++) {
-        all_attackers[char_count + i] = &enemies[i];
+        all_attackers[char_count + i] = &enemies[i].attacker;
     }
 
     printf("Battle started!\n");
@@ -41,13 +42,15 @@ void start_battle(Attacker characters[], int char_count, Attacker enemies[], int
         if (attacker_index != -1) {
             Attacker *attacker = all_attackers[attacker_index];
 
-            // 공격 수행 (임시로 적 또는 캐릭터 하나를 임의로 타겟팅)
+            // 공격 수행
             if (attacker_index < char_count) {
                 // 캐릭터가 공격
-                attack(attacker, enemies); // 적을 대상으로 공격 (구체적인 적 지정 필요)
+                int target_index = attacker_index % enemy_count;  // 임의로 타겟 설정 (수정 가능)
+                attack(attacker, &enemies[target_index].attacker);
             } else {
                 // 적이 공격
-                attack(attacker, characters); // 캐릭터를 대상으로 공격 (구체적인 캐릭터 지정 필요)
+                int target_index = (attacker_index - char_count) % char_count;  // 임의로 타겟 설정 (수정 가능)
+                attack(attacker, &characters[target_index].attacker);
             }
 
             // 공격 후 게이지 초기화
@@ -56,7 +59,7 @@ void start_battle(Attacker characters[], int char_count, Attacker enemies[], int
             // 전투 종료 조건 (예: 모든 적 처치 시 종료)
             int all_enemies_defeated = 1;
             for (int i = 0; i < enemy_count; i++) {
-                if (enemies[i].health > 0) {
+                if (enemies[i].attacker.health > 0) {
                     all_enemies_defeated = 0;
                     break;
                 }
@@ -65,21 +68,29 @@ void start_battle(Attacker characters[], int char_count, Attacker enemies[], int
                 printf("All enemies have been defeated!\n");
                 break;
             }
+
+            // 모든 캐릭터가 처치되면 전투 종료
+            int all_characters_defeated = 1;
+            for (int i = 0; i < char_count; i++) {
+                if (characters[i].attacker.health > 0) {
+                    all_characters_defeated = 0;
+                    break;
+                }
+            }
+            if (all_characters_defeated) {
+                printf("All characters have been defeated. Game Over!\n");
+                break;
+            }
         }
     }
 }
-
-int speed_gague(Character character[], int char_count, Enemy enemy[], int enmey_count){
-    printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-    printf("");
-}  
 
 void attack(Attacker *attacker, Attacker *defender) {
     int damage = calculate_damage(attacker->attack, attacker->critical_rate, defender->dodge_rate);
     defender->health -= damage;
     if (damage > 0) {
-        printf("%s가 %s에게 %d의 데미지를 입혔습니다.\n", attacker->name, defender->name, damage);
+        printf("%s attacked %s for %d damage.\n", attacker->name, defender->name, damage);
     } else {
-        printf("%s의 공격이 빗나갔습니다!\n", attacker->name);
+        printf("%s's attack missed!\n", attacker->name);
     }
 }

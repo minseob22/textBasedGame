@@ -8,7 +8,7 @@
 #include "attacker.h"
 
 // 전역 캐릭터 배열
-Character characters[4]; // 캐릭터 4명
+Character characters[4];
 
 // Main game menu
 void main_menu() {
@@ -24,11 +24,9 @@ void start_game() {
     Village village;
     Dungeon dungeon;
 
-    // 캐릭터 초기화
-    initialize_characters(characters, 4);
-    
-    initialize_village(&village);     // Initialize village
-    initialize_dungeon(&dungeon);     // Initialize dungeon
+    initialize_characters(characters, 4);  // 캐릭터 초기화
+    initialize_village(&village);
+    initialize_dungeon(&dungeon);
 
     while (1) {
         main_menu();
@@ -38,7 +36,7 @@ void start_game() {
         
         switch (choice) {
             case 1:
-                village_menu(&village); // Enter village menu
+                village_menu(&village);
                 break;
             case 2:
                 printf("\n--- Entering the Dungeon ---\n");
@@ -52,13 +50,12 @@ void start_game() {
                         break;
                     }
 
-                    move_party(&dungeon, direction); // Move party
-                    handle_event(&dungeon, characters, 4); // 캐릭터 배열 전달
+                    move_party(&dungeon, direction, characters, 4);
                 }
                 break;
             case 3:
                 printf("Exiting the game.\n");
-                return; // Exit game
+                return;
             default:
                 printf("Invalid choice. Please try again.\n");
                 break;

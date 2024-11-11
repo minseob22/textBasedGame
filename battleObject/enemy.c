@@ -28,7 +28,7 @@ void initialize_enemies(Enemy enemies[], int enemy_count) {
 }
 
 // 적의 정보를 출력하는 함수
-void display_enemy(const Enemy *enemy) {
+void display_enemy(const Enemy *enemy) {    
     printf("enemy spieces: %s\nhealth: %d\nattack: %d\nspeed: %d\n",
            enemy->attacker.name, enemy->attacker.health, enemy->attacker.attack, enemy->attacker.speed);
 }
