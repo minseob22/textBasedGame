@@ -5,12 +5,11 @@
 #include "../include/speedCalculator.h"
 
 void initialize_battle_scene(Character characters[], int char_count, Enemy enemies[], int enemy_count) {
-    printf("전투가 시작되었습니다!\n");
-    for (int i = 0; i < char_count; i++) {
-        printf("아군 %d: %s\n", i + 1, characters[i].attacker.name);
-    }
     for (int i = 0; i < enemy_count; i++) {
-        printf("적 %d: %s\n", i + 1, enemies[i].attacker.name);
+        snprintf(enemies[i].attacker.name, sizeof(enemies[i].attacker.name), "Enemy %d", i + 1);
+        enemies[i].attacker.health = 80;
+        enemies[i].attacker.attack = 10;
+        enemies[i].attacker.speed = 4 + i;
     }
 }
 

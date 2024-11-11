@@ -7,6 +7,9 @@
 #include "battleScene.h"
 #include "attacker.h"
 
+// 전역 캐릭터 배열
+Character characters[4]; // 캐릭터 4명
+
 // Main game menu
 void main_menu() {
     printf("\n--- Text-Based RPG Game ---\n");
@@ -20,6 +23,10 @@ void main_menu() {
 void start_game() {
     Village village;
     Dungeon dungeon;
+
+    // 캐릭터 초기화
+    initialize_characters(characters, 4);
+    
     initialize_village(&village);     // Initialize village
     initialize_dungeon(&dungeon);     // Initialize dungeon
 
@@ -46,7 +53,7 @@ void start_game() {
                     }
 
                     move_party(&dungeon, direction); // Move party
-                    handle_event(&dungeon); // Trigger event after moving
+                    handle_event(&dungeon, characters, 4); // 캐릭터 배열 전달
                 }
                 break;
             case 3:
