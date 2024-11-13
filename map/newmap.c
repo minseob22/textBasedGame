@@ -1,33 +1,42 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../include/dungeon.h"
-#include "../include/battleScene.h"
-#include "../include/character.h"
-#include "../include/enemy.h"
-#include "../include/attacker.h"
 
 #define N 4
 #define M 4
+
+// 던전 맵의 이벤트 타입 정의
+#define EVENT_NOWAY 1  // 벽 (이동 불가)
+#define EVENT_ENEMY 2  // 몬스터
+#define EVENT_CHEST 3  // 보물 상자
+#define EVENT_PATH 0   // 경로
 
 typedef struct {
     int x;
     int y;
 } Position;
 
+typedef struct {
+    int map[N][M];
+    int x;
+    int y;
+} Dungeon;
+
 Position playerPos = {0, 0};
 Position exitPos = {3, 3};
 
+// 던전 초기화 함수
 void initialize_dungeon(Dungeon *dungeon) {
     dungeon->x = 0;
     dungeon->y = 0;
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
-            dungeon->map[i][j] = EVENT_NOWAY;
+            dungeon->map[i][j] = EVENT_PATH;  // 기본적으로 경로로 설정
         }
     }
 }
 
+// 던전 파일로부터 초기화하는 함수
 void initialize_dungeon_from_file(Dungeon *dungeon, const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -37,16 +46,36 @@ void initialize_dungeon_from_file(Dungeon *dungeon, const char *filename) {
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
-            int event;
-            fscanf(file, "[%d]", &event);
-            dungeon->map[i][j] = event;
+            fscanf(file, "%d", &dungeon->map[i][j]);
         }
     }
 
     fclose(file);
 }
 
-void move_party(Dungeon *dungeon, char direction, Character characters[], int char_count) {
+// 던전 맵 출력 함수
+void printMap(Dungeon *dungeon) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < M; j++) {
+            if (i == dungeon->y && j == dungeon->x)
+                printf("[P] ");  // 플레이어 위치
+            else if (i == exitPos.y && j == exitPos.x)
+                printf("[E] ");  // 출구 위치
+            else if (dungeon->map[i][j] == EVENT_NOWAY)
+                printf("[-] ");  // 벽
+            else if (dungeon->map[i][j] == EVENT_ENEMY)
+                printf("[EN]");  // 몬스터
+            else if (dungeon->map[i][j] == EVENT_CHEST)
+                printf("[CH]");  // 보물 상자
+            else
+                printf("[ ] ");  // 경로
+        }
+        printf("\n");
+    }
+}
+
+// 플레이어 이동 함수
+void moveParty(Dungeon *dungeon, char direction) {
     int dx = 0, dy = 0;
     switch (direction) {
         case 'N': case 'n': dy = -1; break;
@@ -57,32 +86,13 @@ void move_party(Dungeon *dungeon, char direction, Character characters[], int ch
             printf("Invalid direction.\n");
             return;
     }
-    movePlayer(dungeon, dx, dy, characters, char_count);
+    movePlayer(dungeon, dx, dy);
     printf("Current position: (%d, %d)\n", dungeon->x, dungeon->y);
     printMap(dungeon);
 }
 
-void printMap(Dungeon *dungeon) {
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < M; j++) {
-            if (i == dungeon->y && j == dungeon->x)
-                printf("[P] ");
-            else if (i == exitPos.y && j == exitPos.x)
-                printf("[E] ");
-            else if (dungeon->map[i][j] == EVENT_ENEMY)
-                printf("[EN]");
-            else if (dungeon->map[i][j] == EVENT_CHEST)
-                printf("[CH]");
-            else if (dungeon->map[i][j] == EVENT_NOWAY)
-                printf("[-] ");
-            else if (dungeon->map[i][j] == EVENT_PATH)
-                printf("[ ] ");
-        }
-        printf("\n");
-    }
-}
-
-void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int char_count) {
+// 플레이어 실제 이동 함수
+void movePlayer(Dungeon *dungeon, int dx, int dy) {
     int newX = dungeon->x + dx;
     int newY = dungeon->y + dy;
 
@@ -93,40 +103,39 @@ void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int ch
 
         if (newX == exitPos.x && newY == exitPos.y) {
             printf("Exit found! Dungeon cleared!\n");
-        } else if (!handle_event(dungeon, characters, char_count)) {
-            printf("There is nothing here.\n");
+        } else {
+            handle_event(dungeon);
         }
     } else {
         printf("Cannot move to (%d, %d)\n", newX, newY);
     }
 }
 
-int handle_event(Dungeon *dungeon, Character characters[], int char_count) {
+// 이벤트 처리 함수 (적 또는 보물 상자 등)
+void handle_event(Dungeon *dungeon) {
     int event = dungeon->map[dungeon->y][dungeon->x];
     
     switch (event) {
-        case EVENT_NONE:
-            return 0;
-        case EVENT_ENEMY: {
-            printf("You encountered enemies! Starting battle with all enemies at this location.\n");
+        case EVENT_ENEMY:
+            printf("You encountered enemies! Prepare for battle.\n");
             break;
-        }
         case EVENT_CHEST:
             printf("You found a treasure chest!\n");
             break;
+        case EVENT_PATH:
+        case EVENT_NOWAY:
+            printf("Nothing here.\n");
+            break;
     }
 
-    if (event != EVENT_NONE) {
+    // 이벤트 발생 후 해당 위치는 경로로 변경
+    if (event != EVENT_PATH) {
         dungeon->map[dungeon->y][dungeon->x] = EVENT_PATH;
     }
-    return event != EVENT_NONE;
 }
 
 int main() {
     Dungeon dungeon;
-    Character characters[4];
-    int char_count = 4;
-
     initialize_dungeon(&dungeon);
     initialize_dungeon_from_file(&dungeon, "dungeon_map.txt");
 
@@ -136,7 +145,7 @@ int main() {
     while (1) {
         printf("Enter direction (N/S/E/W): ");
         scanf(" %c", &direction);
-        move_party(&dungeon, direction, characters, char_count);
+        moveParty(&dungeon, direction);
     }
 
     return 0;
