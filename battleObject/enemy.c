@@ -3,32 +3,71 @@
 #include "../include/enemy.h"
 #include "../include/attacker.h"
 
-// 적의 종류와 스탯을 미리 정의한 배열
-const Enemy predefined_enemies[] = {
-    {"Goblin", {"goblin_warrior", 100, 15, 50, 0, 15, 5}},
-    {"Goblin", {"goblin_archer", 75, 20, 60, 0, 20, 5}},
-    {"Goblin", {"goblin_wizard", 60, 30, 30, 0, 15, 5}},
-    {"Goblin", {"goblin_shaman", 60, 20, 50, 0, 15, 5}},
+// Goblin 종류의 적 정의
+const Enemy goblin_types[] = {
+    {"Goblin", {"Goblin Warrior", 100, 15, 50, 0, 15, 5}},
+    {"Goblin", {"Goblin Archer", 75, 20, 60, 0, 20, 5}},
+    {"Goblin", {"Goblin Wizard", 60, 30, 30, 0, 15, 5}},
+    {"Goblin", {"Goblin Shaman", 60, 20, 50, 0, 15, 5}},
 };
 
-// 배열의 크기 계산
-int get_predefined_enemy_count() {
-    return sizeof(predefined_enemies) / sizeof(predefined_enemies[0]);
+// Mimic 종류의 적 정의
+const Enemy mimic_types[] = {
+    {"Mimic", {"Mimic Chest", 50, 40, 30, 0, 25, 10}},
+    {"Mimic", {"Mimic Treasure", 70, 50, 25, 0, 20, 12}},
+};
+
+// Orc 종류의 적 정의
+const Enemy orc_types[] = {
+    {"Orc", {"Orc Warrior", 120, 25, 40, 0, 10, 8}},
+    {"Orc", {"Orc Berserker", 150, 35, 30, 0, 5, 5}},
+    {"Orc", {"Orc Shaman", 80, 20, 50, 0, 10, 7}},
+};
+
+// Goblin 적의 개수 반환
+int get_goblin_count() {
+    return sizeof(goblin_types) / sizeof(goblin_types[0]);
 }
 
+// Mimic 적의 개수 반환
+int get_mimic_count() {
+    return sizeof(mimic_types) / sizeof(mimic_types[0]);
+}
 
-// 주어진 인덱스에 해당하는 적을 초기화하여 enemies 배열에 설정하는 함수
-void initialize_enemies(Enemy enemies[], int enemy_count) {
-    int predefined_enemy_count = get_predefined_enemy_count();  // 함수 호출로 개수 가져오기
-    for (int i = 0; i < enemy_count; i++) {
-        int type_index = i % predefined_enemy_count;
-        enemies[i] = predefined_enemies[type_index];
-        snprintf(enemies[i].attacker.name, sizeof(enemies[i].attacker.name), "%s %d", predefined_enemies[type_index].species, i + 1);
+// Orc 적의 개수 반환
+int get_orc_count() {
+    return sizeof(orc_types) / sizeof(orc_types[0]);
+}
+
+// 주어진 인덱스에 따라 Goblin 초기화
+void initialize_goblin(Enemy *enemy, int type_index) {
+    if (type_index < get_goblin_count()) {
+        *enemy = goblin_types[type_index];
+    } else {
+        printf("Invalid Goblin type index\n");
+    }
+}
+
+// 주어진 인덱스에 따라 Mimic 초기화
+void initialize_mimic(Enemy *enemy, int type_index) {
+    if (type_index < get_mimic_count()) {
+        *enemy = mimic_types[type_index];
+    } else {
+        printf("Invalid Mimic type index\n");
+    }
+}
+
+// 주어진 인덱스에 따라 Orc 초기화
+void initialize_orc(Enemy *enemy, int type_index) {
+    if (type_index < get_orc_count()) {
+        *enemy = orc_types[type_index];
+    } else {
+        printf("Invalid Orc type index\n");
     }
 }
 
 // 적의 정보를 출력하는 함수
 void display_enemy(const Enemy *enemy) {    
-    printf("enemy spieces: %s\nhealth: %d\nattack: %d\nspeed: %d\n",
-           enemy->attacker.name, enemy->attacker.health, enemy->attacker.attack, enemy->attacker.speed);
+    printf("Enemy Species: %s\nName: %s\nHealth: %d\nAttack: %d\nSpeed: %d\n",
+           enemy->species, enemy->attacker.name, enemy->attacker.health, enemy->attacker.attack, enemy->attacker.speed);
 }

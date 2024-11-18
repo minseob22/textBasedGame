@@ -4,14 +4,6 @@
 #include "../include/attacker.h"
 #include "../include/speedCalculator.h" 
 
-void initialize_battle_scene(Character characters[], int char_count, Enemy enemies[], int enemy_count) {
-    for (int i = 0; i < enemy_count; i++) {
-        snprintf(enemies[i].attacker.name, sizeof(enemies[i].attacker.name), "Enemy %d", i + 1);
-        enemies[i].attacker.health = 80;
-        enemies[i].attacker.attack = 10;
-        enemies[i].attacker.speed = 4 + i;
-    }
-}
 
 void reset_gauge(Attacker *attacker) {
     attacker->gauge = 0; // 턴이 끝난 후 게이지를 초기화

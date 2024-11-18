@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../include/dungeon.h"
-#include "../include/battleScene.h"  // 전투 관련 함수 포함
+#include "../include/battleScene.h"
 #include "../include/character.h"
 #include "../include/enemy.h"
 #include "../include/attacker.h"
@@ -9,26 +9,43 @@
 #define N 4
 #define M 4
 
-typedef struct {
-    int x;
-    int y;
-} Position;
+// 여러 맵을 저장할 배열
+Map all_maps[MAX_MAPS];
 
-Position playerPos = {0, 0};  // 시작 위치
-Position exitPos = {3, 3};    // 출구 위치
+// 전체 맵들을 초기화
+void initialize_all_maps() {
+    initialize_map_1(&all_maps[0]);
+    initialize_map_2(&all_maps[1]);
+    // 추가 맵이 있다면 여기서 초기화
+}
 
-void initialize_dungeon(Dungeon *dungeon) {
-    dungeon->x = 0;
-    dungeon->y = 0;
-
-    // 모든 위치를 EVENT_NOWAY로 초기화
+// 특정 맵을 로드하여 던전에 적용
+void load_map(Dungeon *dungeon, Map *map) {
+    dungeon->playerPos = map->start;  // 시작 위치 로드
+    dungeon->currentMap = *map;       // 현재 맵 정보 로드
+    
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
-            dungeon->map[i][j] = EVENT_NOWAY;
+            dungeon->currentMap.map[i][j] = map->map[i][j];
+            dungeon->currentMap.enemies[i][j] = map->enemies[i][j];
         }
     }
+}
 
-    // 이동 가능한 경로 설정
+// 던전 시작 시 맵 로드
+void start_new_dungeon(Dungeon *dungeon, int map_index) {
+    if (map_index >= 0 && map_index < MAX_MAPS) {
+        load_map(dungeon, &all_maps[map_index]);
+    } else {
+        printf("Invalid map index.\n");
+    }
+}
+
+// 첫 번째 맵 초기화
+void initialize_map_1(Map *map) {
+    map->start = (Position){0, 0};
+    map->exit = (Position){3, 3};
+
     int tempMap[N][M] = {
         {1, 1, 1, 1},
         {0, 1, 0, 0},
@@ -38,25 +55,47 @@ void initialize_dungeon(Dungeon *dungeon) {
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
-            if (tempMap[i][j] == 1) {
-                dungeon->map[i][j] = EVENT_PATH;
-            }
+            map->map[i][j] = (tempMap[i][j] == 1) ? EVENT_PATH : EVENT_NOWAY;
         }
     }
 
-    // 이벤트 위치 지정
-    dungeon->map[2][2] = EVENT_CHEST;
-
-    // 특정 위치에 적 배치 (예: [1][1]에 고블린 2명,오크 2명,미믹 2명)
-    dungeon->map[1][1] = EVENT_ENEMY;
-    initialize_goblin(&dungeon->enemies[1][1], 0);  // 첫 번째 고블린
-    initialize_goblin(&dungeon->enemies[1][2], 1);  // 두 번째 고블린
-    initialize_orc(&dungeon->enemies[2][2], 0);     // 첫 번째 오크
-    initialize_orc(&dungeon->enemies[2][3], 1);     // 두 번째 오크
-    initialize_mimic(&dungeon->enemies[3][3], 0);   // 첫 번째 미믹
-    initialize_mimic(&dungeon->enemies[3][2], 1);   // 두 번째 미믹
+    map->enemy_counts[1][1] = 4; // 4명의 적
+    map->enemies[1][1] = malloc(sizeof(Enemy) * 4);
+    initialize_goblin(&map->enemies[1][1][0], 0); // 첫 번째 고블린
+    initialize_goblin(&map->enemies[1][1][1], 1); // 두 번째 고블린
+    initialize_orc(&map->enemies[1][1][2], 0);    // 첫 번째 오크
+    initialize_orc(&map->enemies[1][1][3], 1);    // 두 번째 오크
 }
 
+// 두 번째 맵 초기화
+void initialize_map_2(Map *map) {
+    map->start = (Position){0, 0};
+    map->exit = (Position){3, 3};
+
+    int tempMap[N][M] = {
+        {1, 0, 1, 1},
+        {1, 1, 0, 1},
+        {0, 1, 1, 1},
+        {1, 1, 0, 1}
+    };
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < M; j++) {
+            map->map[i][j] = (tempMap[i][j] == 1) ? EVENT_PATH : EVENT_NOWAY;
+            map->enemies[i][j] = NULL; // 초기화
+            map->enemy_counts[i][j] = 0;
+        }
+    }
+
+    // (1,2)에 적 2명 배치
+    map->map[1][2] = EVENT_ENEMY;
+    map->enemy_counts[1][2] = 2;
+    map->enemies[1][2] = malloc(sizeof(Enemy) * 2);
+    initialize_orc(&map->enemies[1][2][0], 0); // 첫 번째 오크
+    initialize_orc(&map->enemies[1][2][1], 1); // 두 번째 오크
+}
+
+// 플레이어 이동
 void move_party(Dungeon *dungeon, char direction, Character characters[], int char_count) {
     int dx = 0, dy = 0;
     switch (direction) {
@@ -69,40 +108,42 @@ void move_party(Dungeon *dungeon, char direction, Character characters[], int ch
             return;
     }
     movePlayer(dungeon, dx, dy, characters, char_count);
-    printf("Current position: (%d, %d)\n", dungeon->x, dungeon->y);
+    printf("Current position: (%d, %d)\n", dungeon->playerPos.x, dungeon->playerPos.y);
     printMap(dungeon);
 }
 
+// 맵을 출력
 void printMap(Dungeon *dungeon) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
-            if (i == dungeon->y && j == dungeon->x)
+            if (i == dungeon->playerPos.y && j == dungeon->playerPos.x)
                 printf("[P] ");
-            else if (i == exitPos.y && j == exitPos.x)
+            else if (i == dungeon->currentMap.exit.y && j == dungeon->currentMap.exit.x)
                 printf("[E] ");
-            else if (dungeon->map[i][j] == EVENT_ENEMY)
+            else if (dungeon->currentMap.map[i][j] == EVENT_ENEMY)
                 printf("[EN]");
-            else if (dungeon->map[i][j] == EVENT_CHEST)
+            else if (dungeon->currentMap.map[i][j] == EVENT_CHEST)
                 printf("[CH]");
-            else if (dungeon->map[i][j] == EVENT_NOWAY)
+            else if (dungeon->currentMap.map[i][j] == EVENT_NOWAY)
                 printf("[-] ");
-            else if (dungeon->map[i][j] == EVENT_PATH)
+            else if (dungeon->currentMap.map[i][j] == EVENT_PATH)
                 printf("[ ] ");
         }
         printf("\n");
     }
 }
 
+// 플레이어 위치 이동
 void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int char_count) {
-    int newX = dungeon->x + dx;
-    int newY = dungeon->y + dy;
+    int newX = dungeon->playerPos.x + dx;
+    int newY = dungeon->playerPos.y + dy;
 
-    if (newX >= 0 && newX < N && newY >= 0 && newY < M && dungeon->map[newY][newX] != EVENT_NOWAY) {
-        dungeon->x = newX;
-        dungeon->y = newY;
+    if (newX >= 0 && newX < N && newY >= 0 && newY < M && dungeon->currentMap.map[newY][newX] != EVENT_NOWAY) {
+        dungeon->playerPos.x = newX;
+        dungeon->playerPos.y = newY;
         printf("Moved to (%d, %d)\n", newX, newY);
 
-        if (newX == exitPos.x && newY == exitPos.y) {
+        if (newX == dungeon->currentMap.exit.x && newY == dungeon->currentMap.exit.y) {
             printf("Exit found! Dungeon cleared!\n");
         } else if (!handle_event(dungeon, characters, char_count)) {
             printf("There is nothing here.\n");
@@ -112,8 +153,11 @@ void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int ch
     }
 }
 
+// 이벤트 처리
 int handle_event(Dungeon *dungeon, Character characters[], int char_count) {
-    int event = dungeon->map[dungeon->y][dungeon->x];
+    int x = dungeon->playerPos.x;
+    int y = dungeon->playerPos.y;
+    int event = dungeon->currentMap.map[y][x];
     
     switch (event) {
         case EVENT_NONE:
@@ -121,22 +165,11 @@ int handle_event(Dungeon *dungeon, Character characters[], int char_count) {
         case EVENT_ENEMY: {
             printf("You encountered enemies! Starting battle with all enemies at this location.\n");
 
-            // 현재 위치의 모든 적을 모아서 전투에 참여시키기
-            Enemy encounter_enemies[6];
-            int enemy_count = 0;
+            int enemy_count = dungeon->currentMap.enemy_counts[y][x];
+            Enemy *encounter_enemies = dungeon->currentMap.enemies[y][x];
 
-            // 최대 6명의 적을 탐색하여 encounter_enemies 배열에 추가
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < M; j++) {
-                    if (enemy_count < 6 && dungeon->map[dungeon->y][dungeon->x] == EVENT_ENEMY && dungeon->enemies[dungeon->y][dungeon->x].attacker.health > 0) {
-                        encounter_enemies[enemy_count] = dungeon->enemies[dungeon->y][dungeon->x];
-                        enemy_count++;
-                    }
-                }
-            }
-
-            initialize_battle_scene(characters, char_count, encounter_enemies, enemy_count);  // 전투 초기화
-            start_battle(characters, char_count, encounter_enemies, enemy_count);             // 전투 시작
+            initialize_battle_scene(characters, char_count, encounter_enemies, enemy_count);
+            start_battle(characters, char_count, encounter_enemies, enemy_count);
             break;
         }
         case EVENT_CHEST:
@@ -145,28 +178,8 @@ int handle_event(Dungeon *dungeon, Character characters[], int char_count) {
     }
 
     if (event != EVENT_NONE) {
-        dungeon->map[dungeon->y][dungeon->x] = EVENT_PATH;
+        dungeon->currentMap.map[y][x] = EVENT_PATH;
     }
     return event != EVENT_NONE;
 }
 
-
-
-
-
-// 다양한 적을 랜덤으로 배치하기 위해 사용하는 함수
-void initialize_random_enemy(Enemy *enemy) {
-    int enemy_type = rand() % 3;  // 3가지 유형의 적 중 하나 선택
-
-    switch (enemy_type) {
-        case 0:  // Goblin
-            initialize_goblin(enemy, rand() % get_goblin_count());
-            break;
-        case 1:  // Orc
-            initialize_orc(enemy, rand() % get_orc_count());
-            break;
-        case 2:  // Mimic
-            initialize_mimic(enemy, rand() % get_mimic_count());
-            break;
-    }
-}

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define N 4
-#define M 4
+#define N 2
+#define M 2
 
 // 던전 맵의 이벤트 타입 정의
 #define EVENT_NOWAY 1  // 벽 (이동 불가)
@@ -22,7 +22,7 @@ typedef struct {
 } Dungeon;
 
 Position playerPos = {0, 0};
-Position exitPos = {3, 3};
+Position exitPos = {1, 1};
 
 // 던전 초기화 함수
 void initialize_dungeon(Dungeon *dungeon) {
