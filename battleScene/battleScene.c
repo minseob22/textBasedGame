@@ -37,13 +37,33 @@ void start_battle(Character characters[], int char_count, Enemy enemies[], int e
             // 공격 수행
             if (attacker_index < char_count) {
                 // 캐릭터가 공격
-                int target_index = attacker_index % enemy_count;  // 임의로 타겟 설정 (수정 가능)
+                printf("Choose your target:\n");
+                for (int i = 0; i < enemy_count; i++) {
+                    if (enemies[i].attacker.health > 0) {
+                        printf("%d: %s (Health: %d)\n", i, enemies[i].attacker.name, enemies[i].attacker.health);
+                    }
+                }
+
+                int target_index;
+                do {
+                    printf("Enter the target index: ");
+                    scanf("%d", &target_index);
+                    if (target_index < 0 || target_index >= enemy_count || enemies[target_index].attacker.health <= 0) {
+                        printf("Invalid target. Please choose a valid target.\n");
+                    }
+                } while (target_index < 0 || target_index >= enemy_count || enemies[target_index].attacker.health <= 0);
+
                 attack(attacker, &enemies[target_index].attacker);
             } else {
                 // 적이 공격
-                int target_index = (attacker_index - char_count) % char_count;  // 임의로 타겟 설정 (수정 가능)
+                int target_index;
+                do {
+                    target_index = rand() % char_count; // 적은 랜덤으로 타겟 선택
+                } while (characters[target_index].attacker.health <= 0);
+
                 attack(attacker, &characters[target_index].attacker);
             }
+
 
             // 공격 후 게이지 초기화
             reset_gauge(attacker);

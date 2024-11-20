@@ -11,6 +11,7 @@ typedef struct {
     int gauge;
     int critical_rate;
     int dodge_rate;
+    int overflow; // 게이지 초과분 저장
 } Attacker;
 
 #endif // ATTACKER_H
