@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include "village.h"
 #include "dungeon.h"
 #include "npc.h"
@@ -21,15 +20,6 @@ void main_menu() {
     printf("Choice: ");
 }
 
-// 주인공 이름 설정 함수
-void set_protagonist_name_prompt() {
-    char name[20];
-    printf("Enter the name of the protagonist: ");
-    scanf("%19s", name); // 주인공 이름을 최대 19자까지 입력받음
-    set_protagonist_name(name); // 이름 설정 함수 호출
-    printf("Welcome, %s!\n", name);
-}
-
 // Game loop function
 void start_game() {
     int choice;
@@ -38,8 +28,7 @@ void start_game() {
 
     switch (choice) {
         case 1: // Game Start 선택 시
-            play_prologue();            // 프롤로그 스토리 진행
-            set_protagonist_name_prompt();  // 주인공 이름 설정
+            play_prologue(); // story.c에서 처리
             break;
         case 2:
             printf("Continue is not implemented yet.\n");
@@ -53,14 +42,16 @@ void start_game() {
             return;
     }
 
+    // 마을 및 던전 초기화
     Village village;
-    Dungeon dungeon;
-
     initialize_village(&village);
-    initialize_dungeon(&dungeon);
 
     while (1) {
-        main_menu();
+        printf("\n--- Main Menu ---\n");
+        printf("1. Enter Village\n");
+        printf("2. Enter Dungeon\n");
+        printf("3. Exit Game\n");
+        printf("Choice: ");
         
         int choice;
         scanf("%d", &choice);
@@ -69,21 +60,25 @@ void start_game() {
             case 1:
                 village_menu(&village);
                 break;
-            case 2:
-                printf("\n--- Entering the Dungeon ---\n");
-                while (1) {
-                    printf("Choose direction (N: North, S: South, E: East, W: West, 0: Exit Dungeon): ");
-                    char direction;
-                    scanf(" %c", &direction);
-                    
-                    if (direction == '0') {
-                        printf("Exiting the dungeon.\n");
-                        break;
-                    }
+            case 2: {
+                printf("\n--- Select Dungeon Map ---\n");
+                printf("1. Map 1\n");
+                printf("2. Map 2\n");
+                printf("3. Map 3\n");
+                printf("Choice: ");
+                
+                int map_choice;
+                scanf("%d", &map_choice);
 
-                    move_party(&dungeon, direction, characters, 4);
+                Dungeon dungeon;
+                if (map_choice >= 1 && map_choice <= 3) {
+                    start_new_dungeon(&dungeon, map_choice - 1); // 던전 초기화
+                    run_dungeon(&dungeon, characters, 4); // 던전 실행
+                } else {
+                    printf("Invalid dungeon choice. Returning to main menu.\n");
                 }
                 break;
+            }
             case 3:
                 printf("Exiting the game.\n");
                 return;

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "../include/battleScene.h"
 #include "../include/damageCalculator.h"
 #include "../include/attacker.h"
