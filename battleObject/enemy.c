@@ -5,23 +5,23 @@
 
 // Goblin 종류의 적 정의
 const Enemy goblin_types[] = {
-    {"Goblin", {"Goblin Warrior", 100, 15, 50, 0, 15, 5}},
-    {"Goblin", {"Goblin Archer", 75, 20, 60, 0, 20, 5}},
-    {"Goblin", {"Goblin Wizard", 60, 30, 30, 0, 15, 5}},
-    {"Goblin", {"Goblin Shaman", 60, 20, 50, 0, 15, 5}},
+    {"Goblin", {"Goblin Warrior", 100, 100, 15, 100, 0, 15, 5}},
+    {"Goblin", {"Goblin Archer", 75, 75, 20, 60, 0, 20, 5}},
+    {"Goblin", {"Goblin Wizard", 60, 60 ,30, 30, 0, 15, 5}},
+    {"Goblin", {"Goblin Shaman", 60, 60, 20, 50, 0, 15, 5}},
 };
 
 // Mimic 종류의 적 정의
 const Enemy mimic_types[] = {
-    {"Mimic", {"Mimic Chest", 50, 40, 30, 0, 25, 10}},
-    {"Mimic", {"Mimic Treasure", 70, 50, 25, 0, 20, 12}},
+    {"Mimic", {"Mimic Chest", 50, 50, 40, 30, 0, 25, 10}},
+    {"Mimic", {"Mimic Treasure", 70, 70, 50, 25, 0, 20, 12}},
 };
 
 // Orc 종류의 적 정의
 const Enemy orc_types[] = {
-    {"Orc", {"Orc Warrior", 120, 25, 40, 0, 10, 8}},
-    {"Orc", {"Orc Berserker", 150, 35, 30, 0, 5, 5}},
-    {"Orc", {"Orc Shaman", 80, 20, 50, 0, 10, 7}},
+    {"Orc", {"Orc Warrior", 120, 120, 25, 90, 0, 10, 8}},
+    {"Orc", {"Orc Berserker", 150, 150, 35, 50, 0, 5, 5}},
+    {"Orc", {"Orc Shaman", 80, 80, 20, 50, 0, 10, 7}},
 };
 
 // Goblin 적의 개수 반환

@@ -1,57 +1,75 @@
 #include <stdio.h>
 #include <string.h>
-#include "npc.h"
 
+#include "../include/utility.h"
+#include "../include/npc.h"
+#include "../include/village.h"
+#include "../include/character.h"
+
+// NPC와 상호작용 함수
 void interact_with_npc(NPC *npc) {
-    if (strcmp(npc->type, "장비 상인") == 0) {
-        printf("장비 상인: \"강력한 장비가 많이 준비되어 있지. 구매할 건가?\"\n");
-        printf("1. 장비 구매\n");
-        printf("2. 나가기\n");
+    if (strcmp(npc->type, "Equipment") == 0) {
+        printf("%s: \"I have the finest equipment. Would you like to buy something?\"\n", npc->name);
+        printf("1. Buy equipment\n");
+        printf("2. Leave\n");
         int choice;
         scanf("%d", &choice);
         if (choice == 1) {
-            printf("장비를 구매했습니다!\n");
+            printf("You purchased equipment!\n");
         } else {
-            printf("다음에 또 찾아오게나.\n");
+            printf("Come back anytime.\n");
         }
-    } 
-    else if (strcmp(npc->type, "물약 상인") == 0) {
-        printf("물약 상인: \"여행 중에 필요한 물약이 준비되어 있어요. 구매하실래요?\"\n");
-        printf("1. 물약 구매\n");
-        printf("2. 나가기\n");
+    } else if (strcmp(npc->type, "Potions") == 0) {
+        printf("%s: \"I sell potions that will aid you on your journey. Interested?\"\n", npc->name);
+        printf("1. Buy potions\n");
+        printf("2. Leave\n");
         int choice;
         scanf("%d", &choice);
         if (choice == 1) {
-            printf("물약을 구매했습니다!\n");
+            printf("You purchased potions!\n");
         } else {
-            printf("언제든지 다시 오세요!\n");
+            printf("Come again soon!\n");
         }
-    } 
-    else if (strcmp(npc->type, "암상인") == 0) {
-        printf("암상인: \"희귀한 아이템을 가지고 있지. 필요하다면 가격은 비싸지만 팔아주지.\"\n");
-        printf("1. 희귀 아이템 구매\n");
-        printf("2. 나가기\n");
+    } else if (strcmp(npc->type, "Quests") == 0) {
+        printf("%s: \"I have tasks that need to be done. Can you help?\"\n", npc->name);
+        printf("1. Accept quest\n");
+        printf("2. Leave\n");
         int choice;
         scanf("%d", &choice);
         if (choice == 1) {
-            printf("희귀 아이템을 구매했습니다!\n");
+            printf("You accepted a quest! Check the quest menu for details.\n");
         } else {
-            printf("다음에 또 와.\n");
+            printf("Let me know if you change your mind.\n");
         }
-    } 
-    else if (strcmp(npc->type, "퀘스트 NPC") == 0) {
-        printf("퀘스트 NPC: \"이곳에서 할 일이 많지. 도움을 줄 수 있겠나?\"\n");
-        printf("1. 퀘스트 수락\n");
-        printf("2. 나가기\n");
+    } else if (strcmp(npc->type, "Rest") == 0) {
+        printf("%s: \"Would you like to rest and recover?\"\n", npc->name);
+        printf("1. Rest\n");
+        printf("2. Leave\n");
         int choice;
         scanf("%d", &choice);
         if (choice == 1) {
-            printf("퀘스트를 수락했습니다! 자세한 사항은 퀘스트 메뉴에서 확인하세요.\n");
+            printf("You and your party have rested and recovered all health!\n");
+            rest_party(); // 파티 체력 복구
         } else {
-            printf("언제든지 도움이 필요하면 오게나.\n");
+            printf("Safe travels!\n");
         }
-    } 
-    else {
-        printf("%s: \"대화할 수 없는 NPC입니다.\"\n", npc->name);
+    } else if (strcmp(npc->type, "Party") == 0) {
+        printf("%s: \"Would you like to manage your party?\"\n", npc->name);
+        printf("1. Manage Party\n");
+        printf("2. Leave\n");
+        int choice;
+        scanf("%d", &choice);
+        if (choice == 1) {
+            manage_party(); // 파티 관리
+        } else {
+            printf("Let me know if you need to make changes to your party.\n");
+        }
+    } else {
+        printf("%s: \"I can't help you right now.\"\n", npc->name);
     }
+
+    // NPC와의 상호작용 후, 마을 메뉴로 돌아가기 전에 잠시 대기
+    printf("Press Enter to return to the village menu...\n");
+    getchar(); // 사용자 입력 대기
+    getchar(); // 두 번 호출하여 잔여 개행 처리
 }

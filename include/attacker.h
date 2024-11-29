@@ -3,9 +3,10 @@
 
 #include "attacker.h"
 
-typedef struct {
+typedef struct Attacker{
     char name[20];
     int health;
+    int max_health;     // 최대 체력
     int attack;
     int speed;
     int gauge;

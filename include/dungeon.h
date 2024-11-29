@@ -3,10 +3,10 @@
 
 #include "attacker.h"
 #include "character.h"
+#include "windows.h"
 #include "enemy.h"
-#include "../include/goblin.h"
-#include "../include/orc.h"
-#include "../include/mimic.h"
+#include "npc.h"       // NPC 관련 선언 포함
+
 
 #define MAX_MAPS 100  // 여러 맵을 지원하는 최대 맵 수
 
@@ -39,18 +39,17 @@ typedef struct {
 
 // 여러 맵 초기화 및 선택을 위한 함수 선언
 void initialize_dungeon(Dungeon *dungeon);
-void initialize_all_maps();
 void initialize_map(Map *map, int rows, int cols);
 void load_map(Dungeon *dungeon, Map *map);
 void start_new_dungeon(Dungeon *dungeon, int map_index);
 void initialize_map_1(Map *map);
 void initialize_map_2(Map *map);
 void initialize_map_3(Map *map);
-void move_party(Dungeon *dungeon, char direction, Character characters[], int char_count);
-void printMap(Dungeon *dungeon);
-void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int char_count);
-int handle_event(Dungeon *dungeon, Character characters[], int char_count);
-void run_dungeon(Dungeon *dungeon, Character characters[], int char_count);
+void move_party(Dungeon *dungeon, char direction, Character characters[], int char_count, int center_x, int center_y);
+void printMap(Dungeon *dungeon, int center_x, int center_y);
+void movePlayer(Dungeon *dungeon, int dx, int dy, Character characters[], int char_count,int center_x, int center_y);
+int handle_event(Dungeon *dungeon, Character characters[], int char_count, int center_x, int center_y);
+void run_dungeon(Dungeon *dungeon, Character characters[], int char_count,int center_x, int center_y);
 void free_map(Map *map);
 
 #endif // DUNGEON_H
