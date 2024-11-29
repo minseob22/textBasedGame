@@ -1,151 +1,190 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "../include/dungeon.h"
+#include "../include/battleScene.h"
+#include "../include/character.h"
+#include "../include/enemy.h"
+#include "../include/attacker.h"
 
-#define RUINS_N 4
-#define RUINS_M 4
+// 이벤트 상수 정의
+#define EVENT_NOWAY 0
+#define EVENT_PATH 1
+#define EVENT_ENEMY 2
+#define EVENT_CHEST 3
+#define EVENT_PUZZLE 4
+#define EVENT_RELIC 5
 
-// 유적 맵 이벤트 타입 정의
-#define EVENT_NOWAY 1    // 벽 (이동 불가)
-#define EVENT_ENEMY 2    // 적
-#define EVENT_CHEST 3    // 보물 상자
-#define EVENT_PATH 0     // 경로
-#define EVENT_PUZZLE 4   // 퍼즐
-#define EVENT_RELIC 5    // 유물
-
-typedef struct {
-    int x;
-    int y;
+typedef struct Position {
+    int x, y;
 } Position;
 
-typedef struct {
-    int map[RUINS_N][RUINS_M];
-    int x;
-    int y;
-} Ruins;
+typedef struct Map {
+    int **map;
+    Enemy ***enemies;
+    int **enemy_counts;
+    int rows, cols;
+    Position start, exit;
+} Map;
 
-Position relicPos = {3, 3};
+typedef struct Dungeon {
+    Map currentMap;
+    Position playerPos;
+} Dungeon;
 
-// 유적 초기화 함수
-void initialize_ruins(Ruins *ruins) {
-    // 초기 플레이어 위치
-    ruins->x = 0;
-    ruins->y = 0;
+Map ruins_map;
 
-    // 유적 맵 구성
-    int tempMap[RUINS_N][RUINS_M] = {
-        {0, 1, 2, 1},
-        {0, 4, 0, 1},
-        {0, 0, 0, 1},
-        {1, 1, 0, 5}  // 유물이 있는 위치
-    };
+// 유적 맵 초기화
+void initialize_ruins_map(Map *map) {
+    map->rows = 4;  // 맵 크기: 4x4
+    map->cols = 4;
 
-    // 맵 복사
-    for (int i = 0; i < RUINS_N; i++) {
-        for (int j = 0; j < RUINS_M; j++) {
-            ruins->map[i][j] = tempMap[i][j];
+    map->map = (int **)malloc(map->rows * sizeof(int *));
+    map->enemies = (Enemy ***)malloc(map->rows * sizeof(Enemy **));
+    map->enemy_counts = (int **)malloc(map->rows * sizeof(int *));
+
+    for (int i = 0; i < map->rows; i++) {
+        map->map[i] = (int *)malloc(map->cols * sizeof(int));
+        map->enemies[i] = (Enemy **)malloc(map->cols * sizeof(Enemy *));
+        map->enemy_counts[i] = (int *)malloc(map->cols * sizeof(int));
+
+        for (int j = 0; j < map->cols; j++) {
+            map->map[i][j] = EVENT_NOWAY;  // 기본적으로 벽으로 설정
+            map->enemies[i][j] = NULL;     // 적 없음
+            map->enemy_counts[i][j] = 0;   // 적 수 0
         }
     }
+
+    // 맵의 주요 위치 설정 (출구, 시작점 등)
+    map->start = (Position){0, 1};  // 시작점 (0, 1) 위치
+    map->exit = (Position){3, 3};   // 출구 (3, 3) 위치
+
+    // 유적 맵 구성
+    int tempMap[4][4] = {
+        {1, 1, 1, 1},
+        {0, 1, 0, 0},
+        {1, 1, 1, 1},
+        {0, 0, 0, 1}
+    };
+
+    // 맵에 이벤트 설정
+    for (int i = 0; i < map->rows; i++) {
+        for (int j = 0; j < map->cols; j++) {
+            switch (tempMap[i][j]) {
+                case 1:
+                    map->map[i][j] = EVENT_PATH;  // 길
+                    break;
+                case 0:
+                    map->map[i][j] = EVENT_NOWAY;  // 벽
+                    break;
+            }
+        }
+    }
+
+    // 전사(1, 1)와 궁수(2, 2) 캐릭터 설정
+    // 전사 배치 (1, 1)
+    map->map[1][1] = EVENT_ENEMY;  
+    map->enemy_counts[1][1] = 1;
+    map->enemies[1][1] = malloc(sizeof(Enemy));
+    initialize_warrior(&map->enemies[1][1][0]);
+
+    // 궁수 배치 (2, 2)
+    map->map[2][2] = EVENT_ENEMY;  
+    map->enemy_counts[2][2] = 1;
+    map->enemies[2][2] = malloc(sizeof(Enemy));
+    initialize_archer(&map->enemies[2][2][0]);
 }
 
-// 유적 맵 출력 함수
-void printRuinsMap(Ruins *ruins) {
-    for (int i = 0; i < RUINS_N; i++) {
-        for (int j = 0; j < RUINS_M; j++) {
-            if (i == ruins->y && j == ruins->x)
+// 전사 초기화 함수
+void initialize_warrior(Enemy *warrior) {
+    warrior->type = "Warrior";
+    warrior->hp = 100;
+    warrior->attack = 10;
+    warrior->defense = 5;
+}
+
+// 궁수 초기화 함수
+void initialize_archer(Enemy *archer) {
+    archer->type = "Archer";
+    archer->hp = 70;
+    archer->attack = 15;
+    archer->defense = 3;
+}
+
+// 유적 맵 출력
+void printMap(Map *map, Position playerPos) {
+    for (int i = 0; i < map->rows; i++) {
+        for (int j = 0; j < map->cols; j++) {
+            if (i == playerPos.y && j == playerPos.x)
                 printf("[P] ");  // 플레이어 위치
-            else if (i == relicPos.y && j == relicPos.x)
-                printf("[R] ");  // 유물 위치
-            else if (ruins->map[i][j] == EVENT_NOWAY)
-                printf("[-] ");
-            else if (ruins->map[i][j] == EVENT_ENEMY)
-                printf("[E] ");
-            else if (ruins->map[i][j] == EVENT_CHEST)
-                printf("[CH]");
-            else if (ruins->map[i][j] == EVENT_PUZZLE)
-                printf("[PU]");
-            else if (ruins->map[i][j] == EVENT_RELIC)
-                printf("[RE]");
+            else if (i == map->exit.y && j == map->exit.x)
+                printf("[E] ");  // 출구
+            else if (map->map[i][j] == EVENT_ENEMY)
+                printf("[EN]");  // 적
+            else if (map->map[i][j] == EVENT_CHEST)
+                printf("[CH]");  // 보물
             else
-                printf("[ ] ");
+                printf("[-] ");  // 벽
         }
         printf("\n");
     }
 }
 
-// 유적 이벤트 처리 함수
-void handle_ruins_event(Ruins *ruins) {
-    int event = ruins->map[ruins->y][ruins->x];
+// 플레이어 이동
+void movePlayer(Dungeon *dungeon, int dx, int dy) {
+    int newX = dungeon->playerPos.x + dx;
+    int newY = dungeon->playerPos.y + dy;
 
-    switch (event) {
-        case EVENT_ENEMY:
-            printf("An enemy appears! Prepare for battle!\n");
-            // 적 전투 로직 추가
-            break;
-        case EVENT_CHEST:
-            printf("You found a treasure chest! It contains gold.\n");
-            // 아이템 획득 로직 추가
-            break;
-        case EVENT_PUZZLE:
-            printf("A mysterious puzzle blocks your way.\n");
-            // 퍼즐 로직 추가 (예: 간단한 퀴즈 또는 선택지 제공)
-            printf("Solve the puzzle to proceed.\n");
-            ruins->map[ruins->y][ruins->x] = EVENT_PATH;  // 퍼즐 해결 후 경로로 변경
-            break;
-        case EVENT_RELIC:
-            printf("You discovered an ancient relic! It radiates power.\n");
-            // 유물 획득 로직 추가
-            ruins->map[ruins->y][ruins->x] = EVENT_PATH;  // 유물 획득 후 경로로 변경
-            break;
-        case EVENT_PATH:
-            printf("You walk through the ruins.\n");
-            break;
-        default:
-            printf("Nothing here.\n");
-            break;
-    }
-}
-
-// 플레이어 이동 함수
-void moveRuinsPlayer(Ruins *ruins, char direction) {
-    int dx = 0, dy = 0;
-    switch (direction) {
-        case 'N': case 'n': dy = -1; break;
-        case 'S': case 's': dy = 1; break;
-        case 'E': case 'e': dx = 1; break;
-        case 'W': case 'w': dx = -1; break;
-        default:
-            printf("Invalid direction.\n");
-            return;
-    }
-
-    int newX = ruins->x + dx;
-    int newY = ruins->y + dy;
-
-    if (newX >= 0 && newX < RUINS_M && newY >= 0 && newY < RUINS_N && ruins->map[newY][newX] != EVENT_NOWAY) {
-        ruins->x = newX;
-        ruins->y = newY;
+    if (newX >= 0 && newX < dungeon->currentMap.cols && newY >= 0 && newY < dungeon->currentMap.rows && dungeon->currentMap.map[newY][newX] != EVENT_NOWAY) {
+        dungeon->playerPos.x = newX;
+        dungeon->playerPos.y = newY;
         printf("Moved to (%d, %d)\n", newX, newY);
-        handle_ruins_event(ruins);
     } else {
-        printf("Cannot move to (%d, %d)\n", newX, newY);
+        printf("Invalid move.\n");
     }
-    printRuinsMap(ruins);
 }
 
-// 메인 함수
-int main() {
-    Ruins ruins;
-    initialize_ruins(&ruins);
+// 던전 실행
+void run_dungeon(Dungeon *dungeon) {
+    printf("\n--- Entering the Ruins ---\n");
+    printMap(&dungeon->currentMap, dungeon->playerPos);
 
-    printf("Welcome to the Ancient Ruins.\n");
-    printRuinsMap(&ruins);
-
-    char direction;
     while (1) {
-        printf("Enter direction (N/S/E/W): ");
+        printf("\nChoose direction (N: North, S: South, E: East, W: West, 0: Exit Dungeon): ");
+        char direction;
         scanf(" %c", &direction);
-        moveRuinsPlayer(&ruins, direction);
+
+        if (direction == '0') {
+            printf("Exiting the ruins.\n");
+            break;
+        }
+
+        switch (direction) {
+            case 'N': case 'n': movePlayer(dungeon, 0, -1); break;
+            case 'S': case 's': movePlayer(dungeon, 0, 1); break;
+            case 'E': case 'e': movePlayer(dungeon, 1, 0); break;
+            case 'W': case 'w': movePlayer(dungeon, -1, 0); break;
+            default: printf("Invalid direction.\n"); break;
+        }
+
+        printMap(&dungeon->currentMap, dungeon->playerPos);
+
+        if (dungeon->playerPos.x == dungeon->currentMap.exit.x && dungeon->playerPos.y == dungeon->currentMap.exit.y) {
+            printf("You have reached the exit!\n");
+            break;
+        }
     }
+}
+
+int main() {
+    Dungeon dungeon;
+    dungeon.currentMap = ruins_map;
+    dungeon.playerPos = dungeon.currentMap.start;
+
+    // 유적 맵 초기화
+    initialize_ruins_map(&dungeon.currentMap);
+
+    // 던전 실행
+    run_dungeon(&dungeon);
 
     return 0;
 }
